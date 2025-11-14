@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import CartItem from './CartItem';
 import { useDispatch, useSelector } from 'react-redux';
-import { addItem } from '../CartSlice';
+import { addItem } from './CartSlice';
 
 function ProductList({ onHomeClick }) {
   const [showCart, setShowCart] = useState(false);
@@ -15,6 +15,15 @@ function ProductList({ onHomeClick }) {
   const totalCartQuantity = cartItems.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
+
+  // 🔁 keep addedToCart in sync with items actually in the cart
+  useEffect(() => {
+    const updated = {};
+    cartItems.forEach(item => {
+      updated[item.name] = true;
+    });
+    setAddedToCart(updated);
+  }, [cartItems]);
 
   const plantsArray = [
     {
@@ -319,28 +328,43 @@ function ProductList({ onHomeClick }) {
       </div>
 
       {!showCart ? (
-        <div className="product-grid">
-          {plantsArray.map(category =>
-            category.plants.map(plant => {
-              const isAdded = addedToCart[plant.name];
+        <div className="product-list">
+          {plantsArray.map(category => (
+            <section
+              className="category-section"
+              key={category.category}
+            >
+              <h2 className="category-title">{category.category}</h2>
+              <div className="product-grid">
+                {category.plants.map(plant => {
+                  const isAdded = addedToCart[plant.name];
 
-              return (
-                <div className="product-card" key={category.category + plant.name}>
-                  <img src={plant.image} alt={plant.name} className="product-image" />
-                  <h3>{plant.name}</h3>
-                  <p>{plant.description}</p>
-                  <p className="product-cost">{plant.cost}</p>
-                  <button
-                    onClick={() => handleAddToCart(plant)}
-                    disabled={isAdded}
-                    className="add-to-cart-button"
-                  >
-                    {isAdded ? 'Added to Cart' : 'Add to Cart'}
-                  </button>
-                </div>
-              );
-            })
-          )}
+                  return (
+                    <div
+                      className="product-card"
+                      key={category.category + plant.name}
+                    >
+                      <img
+                        src={plant.image}
+                        alt={plant.name}
+                        className="product-image"
+                      />
+                      <h3>{plant.name}</h3>
+                      <p>{plant.description}</p>
+                      <p className="product-cost">{plant.cost}</p>
+                      <button
+                        onClick={() => handleAddToCart(plant)}
+                        disabled={isAdded}
+                        className="add-to-cart-button"
+                      >
+                        {isAdded ? 'Added to Cart' : 'Add to Cart'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       ) : (
         <CartItem onContinueShopping={handleContinueShopping} />
